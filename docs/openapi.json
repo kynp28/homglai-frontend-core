@@ -1,0 +1,2061 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Homglai Service Core API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Accessories": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Accessories received with the machine (SRS 2.1). Unknown keys are rejected.",
+        "properties": {
+          "drainTray": {
+            "type": "boolean",
+            "default": false
+          },
+          "portafilter": {
+            "type": "boolean",
+            "default": false
+          },
+          "basket1Shot": {
+            "type": "boolean",
+            "default": false
+          },
+          "basket2Shot": {
+            "type": "boolean",
+            "default": false
+          },
+          "powerCord": {
+            "type": "boolean",
+            "default": false
+          },
+          "waterTank": {
+            "type": "boolean",
+            "default": false
+          },
+          "tamper": {
+            "type": "boolean",
+            "default": false
+          },
+          "steamWandCover": {
+            "type": "boolean",
+            "default": false
+          },
+          "other": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          }
+        }
+      },
+      "CareAdvice": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cleanAfterUse": {
+            "type": "boolean",
+            "default": false
+          },
+          "noOverload": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "RepairIntakeFields": {
+        "type": "object",
+        "properties": {
+          "paperBookNo": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "example": "112"
+          },
+          "paperReceiptNo": {
+            "type": "string",
+            "pattern": "^\\d{1,10}$",
+            "nullable": true,
+            "example": "5595",
+            "description": "Digits only, unique"
+          },
+          "receivedDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-11-05",
+            "description": "Default = today (Asia/Bangkok). Max 1 day in the future."
+          },
+          "warrantyStatus": {
+            "type": "string",
+            "enum": [
+              "IN_WARRANTY",
+              "OUT_OF_WARRANTY"
+            ],
+            "nullable": true
+          },
+          "warrantyExpiryDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Required when IN_WARRANTY; not allowed otherwise"
+          },
+          "billingType": {
+            "type": "string",
+            "enum": [
+              "CHARGE_OUT_OF_WARRANTY",
+              "NO_CHARGE_IN_WARRANTY",
+              "CHARGE_IN_WARRANTY"
+            ],
+            "nullable": true
+          },
+          "accessories": {
+            "$ref": "#/components/schemas/Accessories"
+          },
+          "loanerMachine": {
+            "type": "boolean",
+            "default": false
+          },
+          "loanerNote": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "careAdvice": {
+            "$ref": "#/components/schemas/CareAdvice"
+          },
+          "warningNote": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "otherSymptom": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RepairIntakeCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RepairIntakeFields"
+          },
+          {
+            "type": "object",
+            "required": [
+              "customer",
+              "machine",
+              "symptomIds"
+            ],
+            "properties": {
+              "workType": {
+                "type": "string",
+                "enum": [
+                  "REPAIR"
+                ],
+                "default": "REPAIR"
+              },
+              "customer": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "บจก. ชวัลชา"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "0812345678"
+                  },
+                  "address": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "machine": {
+                "type": "object",
+                "required": [
+                  "brand",
+                  "model"
+                ],
+                "properties": {
+                  "brand": {
+                    "type": "string",
+                    "example": "GEF"
+                  },
+                  "model": {
+                    "type": "string",
+                    "example": "Aa+"
+                  },
+                  "serialNumber": {
+                    "type": "string"
+                  }
+                }
+              },
+              "symptomIds": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "RepairIntakeUpdate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RepairIntakeFields"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Partial update. status, technicianId, jobNumber and customer.phone are rejected (400).",
+            "properties": {
+              "customer": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "machine": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "brand": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "serialNumber": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "symptomIds": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RepairItemCreate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ปั๊มน้ำ"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999,
+            "default": 1,
+            "description": "Hours for LABOR_HOURS"
+          },
+          "unitPrice": {
+            "type": "number",
+            "example": 250,
+            "description": "> 0 (0 allowed for LABOR_HOURS), max 2 decimals"
+          },
+          "price": {
+            "type": "number",
+            "deprecated": true,
+            "description": "Legacy alias of unitPrice"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true,
+            "example": "1681573"
+          },
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "PART",
+              "TRAVEL_FEE",
+              "LABOR_HOURS",
+              "SERVICE_FEE"
+            ],
+            "default": "PART"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Employee login",
+        "description": "Authenticates an employee by username and password. Returns a 12-hour JWT token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "SecretPassword123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful."
+          },
+          "401": {
+            "description": "Invalid username or password."
+          },
+          "429": {
+            "description": "Too many login attempts."
+          }
+        }
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "summary": "Change self password",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "oldPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 12
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "401": {
+            "description": "Current password incorrect"
+          }
+        }
+      }
+    },
+    "/api/employees": {
+      "post": {
+        "summary": "Create employee account (Admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "name",
+                  "password",
+                  "role"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "TECHNICIAN",
+                      "RECEPTIONIST"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Employee created successfully"
+          }
+        }
+      },
+      "get": {
+        "summary": "List all employees (Admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of employees"
+          }
+        }
+      }
+    },
+    "/api/employees/{id}": {
+      "patch": {
+        "summary": "Update employee details or deactivate (Admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee updated"
+          }
+        }
+      }
+    },
+    "/api/employees/{id}/reset-password": {
+      "post": {
+        "summary": "Reset employee password (Admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPassword"
+                ],
+                "properties": {
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 12
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          }
+        }
+      }
+    },
+    "/api/employees/{id}/status": {
+      "patch": {
+        "summary": "Update employee status and trigger auto-assignment",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/api/holidays": {
+      "get": {
+        "summary": "List shop holidays (special closures)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Any staff role. Business-minute timers (progress reminders, needsProgressUpdate) skip these dates.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "[{ id, date, name, createdAt, createdBy: { id, name } }] ordered by date"
+          },
+          "400": {
+            "description": "Invalid query"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a shop holiday, or a range of consecutive closed days (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "date",
+                  "name"
+                ],
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2027-04-13"
+                  },
+                  "toDate": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2027-04-15",
+                    "description": "Last day (inclusive), at most 31 days"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "สงกรานต์"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created holidays"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "403": {
+            "description": "Not ADMIN"
+          },
+          "409": {
+            "description": "One of the dates is already a holiday (details.existingDates)"
+          }
+        }
+      }
+    },
+    "/api/holidays/{id}": {
+      "delete": {
+        "summary": "Remove a shop holiday (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "summary": "List my notifications (in-app staff notifications)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Returns only the caller's own notifications, newest first. Any authenticated role.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unreadOnly",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": "false"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ total, unreadCount, page, limit, totalPages, notifications: [{ id, type, repairOrderId, title, body, payload, createdAt, readAt }] }"
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "patch": {
+        "summary": "Mark one of my notifications as read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Idempotent (readAt keeps its first value). Another employee's notification returns 404.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The notification with readAt set"
+          },
+          "400": {
+            "description": "Invalid id"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not found (or belongs to someone else)"
+          }
+        }
+      }
+    },
+    "/api/repairs": {
+      "post": {
+        "summary": "Create a new repair order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Registers or updates customer, registers machine, links symptoms, and opens a repair order with NEW status\nusing the fields of the paper intake form (SRS 2). Accessible by RECEPTIONIST and ADMIN.\nRequired minimum: customer name + phone, machine brand + model, at least one symptom.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairIntakeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Repair order created successfully."
+          },
+          "400": {
+            "description": "Validation failed (e.g. unknown accessories key, IN_WARRANTY without warrantyExpiryDate, receivedDate in the future)."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "409": {
+            "description": "paperReceiptNo is already used by another repair order."
+          }
+        }
+      },
+      "get": {
+        "summary": "List repair orders with filtering and pagination",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "technicianId",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "description": "Matches jobNumber, paperReceiptNo, paperBookNo, customer phone or customer name (max 100 chars)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "needsProgressUpdate",
+            "description": "true = active jobs (INSPECTING / WAITING_APPROVAL / REPAIRING) idle for at least PROGRESS_REMINDER_INTERVAL_MINUTES of business time; rows include idleBusinessMinutes (TECHNICIAN own, ADMIN all)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "awaitingAck",
+            "description": "true = only jobs reserved for a technician but not yet accepted (ADMIN sees all, TECHNICIAN sees own)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "description": "TECHNICIAN sees only orders assigned to them (including ones awaiting acceptance); unassigned NEW orders are not listed. Each row includes assignedAt and waitingMinutes (minutes a reserved job has waited for acceptance, null otherwise).",
+        "responses": {
+          "200": {
+            "description": "List of repair orders (summary incl. paperReceiptNo, paperBookNo, receivedDate, warrantyStatus)"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}": {
+      "get": {
+        "summary": "Get repair order details by ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "description": "Full intake data (paper form fields, warranty, accessories, careAdvice, ...), items with\nquantity / unitPrice / amount / itemType / barcode / resolution fields, and totalAmount\n(sum of the amounts of all items, no VAT/discount). TECHNICIAN may only view orders assigned to them.\nAlso returns payment (see PUT /payment) and allowedActions: the buttons the caller may use on this order —\nACCEPT, RELEASE, ADD_ITEM, RESOLVE_ITEM, COMPLETE_ITEM, START_REPAIR, STILL_WORKING, COMPLETE,\nCOMPLETE_NOT_REPAIRED, REWORK, DELIVER, RECORD_PAYMENT, EDIT_HELPERS, EDIT_INTAKE, CANCEL. The web app shows a\nbutton only when its action is listed; the endpoints enforce the same rules.\n",
+        "responses": {
+          "200": {
+            "description": "Repair order details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (Technician viewing an order not assigned to them, including unassigned NEW orders)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit intake data of a repair order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "RECEPTIONIST/ADMIN only. Edits paper-form / customer (name, address) / machine / symptoms / warranty /\naccessories / loaner / billingType / careAdvice / warningNote / receivedDate / paperBookNo / paperReceiptNo.\nCannot change status, technicianId or jobNumber. Not allowed on DELIVERED or CANCELLED orders.\nA StatusLog entry records who edited which fields (field names only).\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairIntakeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated repair order details (same shape as GET /api/repairs/{id})"
+          },
+          "400": {
+            "description": "Validation failed or forbidden field (status/technicianId/jobNumber)"
+          },
+          "403": {
+            "description": "Forbidden (TECHNICIAN)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Order is DELIVERED/CANCELLED, or paperReceiptNo already used"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/accept": {
+      "post": {
+        "summary": "Accept a reserved job (technician \"รับงานนี้\")",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "The assigned TECHNICIAN accepts the job reserved for them, or an ADMIN accepts on their behalf\n(logged as such). NEW -> INSPECTING and technician RESERVED -> BUSY. A job that was returned to\nthe pool from a deactivated technician resumes at WAITING_APPROVAL (PENDING items), REPAIRING\n(APPROVED/COMPLETED items) or INSPECTING.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; returns the repair order details"
+          },
+          "403": {
+            "description": "RECEPTIONIST, or a technician the job is not reserved for"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Not waiting for acceptance (already accepted, unassigned, or other status)"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/release": {
+      "post": {
+        "summary": "Release a reserved job back to the pool (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Only for a job reserved for a technician that has not been accepted yet. The order goes back to\nthe pool (technicianId cleared), the technician returns to AVAILABLE, and the queue runs again.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Released; returns the repair order details (it may already be reserved for another technician)"
+          },
+          "403": {
+            "description": "Not an ADMIN"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Not a reserved, unaccepted job"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/items": {
+      "post": {
+        "summary": "Add a repair item and trigger approval loop",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Adds an item (PART / TRAVEL_FEE / LABOR_HOURS / SERVICE_FEE) to the repair order. Accessible by the assigned\nTECHNICIAN or ADMIN. Response item includes quantity, unitPrice, amount (= quantity x unitPrice), itemType,\nbarcode and the legacy `price` alias (= unitPrice, kept temporarily).\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Item added and status updated."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Order not found."
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/items/{itemId}/status": {
+      "patch": {
+        "summary": "Record the customer's price decision for an item (phone confirmation)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "SRS 3.4: the shop confirms prices with the customer by phone and records the result per item.\nAllowed: RECEPTIONIST, ADMIN, and the TECHNICIAN assigned to the order (other technicians 403).\nStores resolvedById, resolvedAt, resolutionChannel = PHONE and the optional note. When every item is\ndecided the order moves to REPAIRING (at least one approved) or back to INSPECTING (all rejected).\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "APPROVED",
+                      "REJECTED"
+                    ]
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "โทรคุยกับเจ้าของร้าน 14:20"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item resolved successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/complete": {
+      "post": {
+        "summary": "Submit finished repair work (\"ส่งงานซ่อม\")",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "The assigned TECHNICIAN (or an ADMIN) completes a REPAIRING order with a summary. Every APPROVED item must be\nCOMPLETED first (409 with the count). Optional helperTechnicianIds records technicians who helped\n(informational only, active technicians other than the owner). The technician becomes AVAILABLE when they\nhold no other job and is immediately offered the next job in the queue.\noutcome NOT_REPAIRED (\"ลูกค้าไม่ซ่อม\") closes an INSPECTING or REPAIRING order without repair; the machine is\nthen handed back through DELIVERED as usual and the customer LINE message says it was not repaired.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "completionSummary"
+                ],
+                "properties": {
+                  "completionSummary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "helperTechnicianIds": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "REPAIRED",
+                      "NOT_REPAIRED"
+                    ],
+                    "default": "REPAIRED"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed; returns the repair order details"
+          },
+          "400": {
+            "description": "Invalid summary or helper technicians"
+          },
+          "403": {
+            "description": "Not the assigned technician / not allowed"
+          },
+          "409": {
+            "description": "Not REPAIRING, or approved items not yet completed"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/still-working": {
+      "post": {
+        "summary": "\"ยังซ่อมอยู่\" — confirm the job is still in progress",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Restarts the progress-reminder timer (lastActivityAt) and clears the unanswered counter. Assigned TECHNICIAN or ADMIN; only while INSPECTING / WAITING_APPROVAL / REPAIRING.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timer reset; returns the repair order details"
+          },
+          "403": {
+            "description": "Not the assigned technician / not allowed"
+          },
+          "409": {
+            "description": "Order is not in an active work status"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/helpers": {
+      "put": {
+        "summary": "Set the helper technicians of a job",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "RECEPTIONIST / ADMIN replace the list of helper technicians (informational only) until the order is DELIVERED or CANCELLED. An empty list clears it.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "technicianIds"
+                ],
+                "properties": {
+                  "technicianIds": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated; returns the repair order details (helpers listed)"
+          },
+          "400": {
+            "description": "Invalid technician ids (owner, inactive, not a technician)"
+          },
+          "403": {
+            "description": "TECHNICIAN"
+          },
+          "409": {
+            "description": "Order is DELIVERED or CANCELLED"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/payment": {
+      "put": {
+        "summary": "Record or correct the payment of a COMPLETED / DELIVERED order (RECEPTIONIST, ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Record only, never blocks delivery. The detail response has payment { payableAmount (APPROVED + COMPLETED\nitems), paidAmount, status NOT_RECORDED | MATCHED | DIFFERENT, warning { code, message } | null, method, note,\npaidAt, recordedBy }. Every change is written to the status log.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "method"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "CASH",
+                      "TRANSFER",
+                      "OTHER"
+                    ]
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recorded; returns the repair order details"
+          },
+          "400": {
+            "description": "Invalid amount / method"
+          },
+          "403": {
+            "description": "Not RECEPTIONIST / ADMIN"
+          },
+          "409": {
+            "description": "Order is not COMPLETED or DELIVERED"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/images": {
+      "post": {
+        "summary": "Upload photos of a repair order (multipart)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "multipart/form-data: field \"files\" (1..IMAGE_MAX_PER_KIND files) and field \"kind\".\nINTAKE / RECEIPT_PAPER: RECEPTIONIST, ADMIN. DELIVERY / OTHER: the assigned TECHNICIAN, RECEPTIONIST, ADMIN.\nThe file content is checked (JPEG, PNG or WebP only; HEIC/HEIF -> 415), auto-rotated, all EXIF/GPS metadata\nremoved, shrunk to IMAGE_MAX_LONG_EDGE and stored as JPEG. At most IMAGE_MAX_PER_KIND images per kind per order\n(409). Not allowed on DELIVERED/CANCELLED orders (409). Images are never public. Returns the image list.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "files",
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "INTAKE",
+                      "RECEIPT_PAPER",
+                      "DELIVERY",
+                      "OTHER"
+                    ]
+                  },
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "[{ id, kind, createdAt, uploadedBy: { id, name } }]"
+          },
+          "400": {
+            "description": "Missing files / invalid kind / too many files in one request"
+          },
+          "403": {
+            "description": "Not allowed for this kind or not the assigned technician"
+          },
+          "409": {
+            "description": "Per-kind limit reached or order closed"
+          },
+          "413": {
+            "description": "A file is larger than IMAGE_MAX_BYTES"
+          },
+          "415": {
+            "description": "Not a JPEG / PNG / WebP image"
+          }
+        }
+      },
+      "get": {
+        "summary": "List photo metadata of a repair order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "ADMIN / RECEPTIONIST any order; TECHNICIAN only their own. No storage paths are returned.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "[{ id, kind, createdAt, uploadedBy: { id, name } }]"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/images/{imageId}": {
+      "get": {
+        "summary": "Download one photo (image/jpeg)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Same visibility as the list. The image must belong to this order. Cache-Control private, no-store.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "imageId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JPEG bytes",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, not of this order, or the file is gone"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/items/{itemId}/complete": {
+      "patch": {
+        "summary": "Mark an approved item as completed",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Sets status of an approved item to COMPLETED. Accessible by assigned technician or ADMIN.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item marked as COMPLETED"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Item not in APPROVED status"
+          }
+        }
+      }
+    },
+    "/api/repairs/{id}/status": {
+      "patch": {
+        "summary": "Update repair order status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Updates repair order status. Accessible by all authenticated roles (TECHNICIAN must be assigned technician). COMPLETED uses the same rules as POST /complete; technicians must use POST /complete (403 here).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NEW",
+                      "INSPECTING",
+                      "WAITING_APPROVAL",
+                      "REPAIRING",
+                      "COMPLETED",
+                      "DELIVERED",
+                      "CANCELLED"
+                    ]
+                  },
+                  "note": {
+                    "type": "string"
+                  },
+                  "payment": {
+                    "type": "object",
+                    "description": "Only with status DELIVERED. Payment received at handover (record only, never required).",
+                    "required": [
+                      "amount",
+                      "method"
+                    ],
+                    "properties": {
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "example": 845.3
+                      },
+                      "method": {
+                        "type": "string",
+                        "enum": [
+                          "CASH",
+                          "TRANSFER",
+                          "OTHER"
+                        ]
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 500
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Order not found."
+          }
+        }
+      }
+    },
+    "/api/symptoms": {
+      "get": {
+        "summary": "Get all symptoms grouped by category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "[{ id, name, symptoms: [{ id, name, categoryId }] }]"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a symptom to a category (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "categoryId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "ไม่มีน้ำออกจากหัวชง"
+                  },
+                  "categoryId": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created symptom"
+          },
+          "400": {
+            "description": "Invalid body"
+          },
+          "403": {
+            "description": "Not ADMIN"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Same name already exists in this category"
+          }
+        }
+      }
+    },
+    "/api/symptoms/categories": {
+      "post": {
+        "summary": "Add a symptom category (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "ระบบน้ำ"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created category"
+          },
+          "400": {
+            "description": "Invalid body"
+          },
+          "403": {
+            "description": "Not ADMIN"
+          },
+          "409": {
+            "description": "Category name already exists"
+          }
+        }
+      }
+    },
+    "/api/symptoms/categories/{id}": {
+      "patch": {
+        "summary": "Rename a symptom category (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renamed category"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Category name already exists"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an empty symptom category (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Category still has symptoms"
+          }
+        }
+      }
+    },
+    "/api/symptoms/{id}": {
+      "patch": {
+        "summary": "Rename a symptom or move it to another category (ADMIN)",
+        "description": "Renaming also changes how existing orders display it. Send name and/or categoryId.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "categoryId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated symptom"
+          },
+          "400": {
+            "description": "Invalid body / nothing to update"
+          },
+          "404": {
+            "description": "Symptom or category not found"
+          },
+          "409": {
+            "description": "Same name already exists in the target category"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a symptom that no repair order uses (ADMIN)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Symptom not found"
+          },
+          "409": {
+            "description": "Used on repair orders (rename instead)"
+          }
+        }
+      }
+    },
+    "/api/tracking/search": {
+      "post": {
+        "summary": "Public job status search (no login)",
+        "description": "Search by ONE number: a job number \"REP-YYMM-NNNN\" or the paper receipt number (1-10 digits).\nPhone numbers are not accepted. Returns a whitelist only: jobNumber, status, statusLabelTh, receivedDate,\nupdatedAt, machine { brand, model }, timeline [{ status, statusLabelTh, at }] (consecutive repeats collapsed).\nEvery not-found case (unknown number, wrong format, missing body) returns the same 404 body.\nRate limited per IP (PUBLIC_SEARCH_RATE_LIMIT_MAX / 15 min, default 30).\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "example": "REP-2611-0001"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public status view"
+          },
+          "404": {
+            "description": "{ status: \"error\", message: \"ไม่พบข้อมูลใบงาน กรุณาตรวจสอบเลขที่อีกครั้ง\" }"
+          },
+          "429": {
+            "description": "Too many searches from this IP"
+          }
+        }
+      }
+    },
+    "/api/tracking/subscribe-line": {
+      "post": {
+        "summary": "Link the customer's LINE account to one repair order (LIFF)",
+        "description": "lineAccessToken is a LIFF access token; the server verifies it with LINE (channel must be\nLINE_LOGIN_CHANNEL_ID) and takes the userId from LINE — a lineUserId is never accepted from the client.\nThe phone must match the customer's phone on file. Idempotent. One LINE account may link many orders and\none order may be linked to several accounts. Every failure returns the same 400 body. 10 requests / 15 min / IP.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query",
+                  "phone",
+                  "lineAccessToken"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "REP-YYMM-NNNN or paper receipt number"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "lineAccessToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ subscribed: true, alreadySubscribed, jobNumber, status, statusLabelTh }"
+          },
+          "400": {
+            "description": "Generic failure (unknown order, wrong phone or invalid token)"
+          },
+          "429": {
+            "description": "Too many attempts from this IP"
+          }
+        }
+      }
+    },
+    "/api/tracking/stream/{trackingToken}": {
+      "get": {
+        "summary": "Establish SSE connection for live tracking",
+        "description": "Opens a persistent Server-Sent Events stream using an order trackingToken. Each event is exactly { status, updatedAt }.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trackingToken",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event stream established.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid tracking token."
+          }
+        }
+      }
+    },
+    "/api/webhook/line": {
+      "post": {
+        "summary": "LINE Messaging API Webhook",
+        "description": "Receives events from LINE. Do not require Auth.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "responses": {
+          "200": {
+            "description": "Returns server status and database connection state."
+          },
+          "500": {
+            "description": "Database disconnected."
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}
