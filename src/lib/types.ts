@@ -262,3 +262,22 @@ export interface RepairImage {
   createdAt: string;
   uploadedBy: { id: number; name: string } | null;
 }
+
+/** GET /api/employees (ADMIN) */
+export interface EmployeeRecord extends Employee {
+  isActive: boolean;
+  weeklyDayOff: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const WEEKDAY_LABEL_TH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+
+/** GET /api/holidays */
+export interface Holiday {
+  id: number;
+  date: string;
+  name: string;
+  createdAt: string;
+  createdBy: { id: number; name: string } | null;
+}

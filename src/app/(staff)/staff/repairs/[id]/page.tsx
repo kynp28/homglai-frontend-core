@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Pencil, TriangleAlert } from "lucide-react";
 
 import { ApiError, apiData } from "@/lib/api";
 import {
@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthImage } from "@/components/staff/auth-image";
 import { ItemActions, RepairActionPanel } from "@/components/staff/repair-actions";
+import { HelpersEditor } from "@/components/staff/helpers-editor";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -42,14 +43,14 @@ export default function RepairDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   // ข้อความแจ้งหลังเปิดใบงาน (?created=1 / ?imageError=1)
-  const [flash, setFlash] = useState<"created" | "imageError" | null>(null);
+  const [flash, setFlash] = useState<"created" | "imageError" | "updated" | null>(null);
   const [order, setOrder] = useState<RepairDetail | null>(null);
   const [images, setImages] = useState<RepairImage[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
-    setFlash(q.get("imageError") ? "imageError" : q.get("created") ? "created" : null);
+    setFlash(q.get("imageError") ? "imageError" : q.get("created") ? "created" : q.get("updated") ? "updated" : null);
   }, []);
 
   const load = useCallback(() => {
@@ -104,11 +105,23 @@ export default function RepairDetailPage() {
         <h1 className="text-xl font-semibold">{order.jobNumber}</h1>
         <Badge>{statusLabel}</Badge>
         <span className="text-sm text-muted-foreground">รับเครื่อง {formatDate(order.receivedDate)}</span>
+        {order.allowedActions.includes("EDIT_INTAKE") && (
+          <Button asChild variant="outline" size="sm" className="ml-auto">
+            <Link href={`/staff/repairs/${order.id}/edit`}>
+              <Pencil /> แก้ไขข้อมูลรับเครื่อง
+            </Link>
+          </Button>
+        )}
       </div>
 
       {flash === "created" && (
         <p className="flex items-center gap-2 rounded-md bg-green-600/10 px-4 py-3 text-sm text-green-800">
           <CheckCircle2 className="size-4" /> เปิดใบงานเรียบร้อยแล้ว
+        </p>
+      )}
+      {flash === "updated" && (
+        <p className="flex items-center gap-2 rounded-md bg-green-600/10 px-4 py-3 text-sm text-green-800">
+          <CheckCircle2 className="size-4" /> บันทึกการแก้ไขข้อมูลรับเครื่องแล้ว
         </p>
       )}
       {flash === "imageError" && (
@@ -260,6 +273,7 @@ export default function RepairDetailPage() {
                   {order.helpers.length ? order.helpers.map((h) => h.technician.name).join(", ") : "—"}
                 </Row>
               </dl>
+              <HelpersEditor order={order} onDone={load} />
             </CardContent>
           </Card>
 
