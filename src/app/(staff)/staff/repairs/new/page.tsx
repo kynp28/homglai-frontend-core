@@ -49,6 +49,7 @@ export default function NewRepairPage() {
   const [serialNumber, setSerialNumber] = useState("");
   // อาการ
   const [categories, setCategories] = useState<SymptomCategory[] | null>(null);
+  const [symptomsError, setSymptomsError] = useState<string | null>(null);
   const [symptomIds, setSymptomIds] = useState<number[]>([]);
   const [otherSymptom, setOtherSymptom] = useState("");
   // อุปกรณ์ที่รับมา
@@ -69,11 +70,15 @@ export default function NewRepairPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadSymptoms() {
+    setSymptomsError(null);
+    setCategories(null);
     apiData<SymptomCategory[]>("/api/symptoms")
-      .then(setCategories)
-      .catch((err) => setError(err instanceof Error ? err.message : "โหลดรายการอาการไม่สำเร็จ"));
-  }, []);
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch((err) => setSymptomsError(err instanceof Error ? err.message : "โหลดรายการอาการไม่สำเร็จ"));
+  }
+
+  useEffect(loadSymptoms, []);
 
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
   useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
@@ -206,7 +211,20 @@ export default function NewRepairPage() {
       </Section>
 
       <Section title="อาการเสีย" description="เลือกได้หลายอาการ (อย่างน้อย 1)">
-        {!categories && <Loader2 className="animate-spin text-muted-foreground" />}
+        {!categories && !symptomsError && <Loader2 className="animate-spin text-muted-foreground" />}
+        {symptomsError && (
+          <div className="flex flex-wrap items-center gap-3 rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <span>โหลดรายการอาการไม่สำเร็จ: {symptomsError}</span>
+            <Button type="button" size="sm" variant="outline" onClick={loadSymptoms}>
+              ลองใหม่
+            </Button>
+          </div>
+        )}
+        {categories && categories.every((c) => c.symptoms.length === 0) && (
+          <p className="rounded-md bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+            ยังไม่มีรายการอาการในระบบ — ผู้ดูแลระบบต้องเพิ่มอาการก่อน จึงจะเปิดใบงานได้
+          </p>
+        )}
         {categories?.map((cat) => (
           <div key={cat.id} className="flex flex-col gap-2">
             <p className="text-sm font-medium text-muted-foreground">{cat.name}</p>
