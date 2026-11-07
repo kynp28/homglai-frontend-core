@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Coffee, Loader2 } from "lucide-react";
 
 import { api } from "@/lib/api";
@@ -17,10 +17,23 @@ export default function TrackPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PublicTrackingView | null>(null);
 
+  // สแกน QR จากใบรับเครื่อง → /track?q=REP-xxxx ค้นหาให้ทันที
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")?.trim();
+    if (q) {
+      setQuery(q);
+      search(q);
+    }
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
+    await search(q);
+  }
+
+  async function search(q: string) {
     setLoading(true);
     setError(null);
     setResult(null);

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Loader2, Pencil, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Pencil, Printer, TriangleAlert } from "lucide-react";
 
 import { ApiError, apiData } from "@/lib/api";
 import {
@@ -105,8 +105,13 @@ export default function RepairDetailPage() {
         <h1 className="text-xl font-semibold">{order.jobNumber}</h1>
         <Badge>{statusLabel}</Badge>
         <span className="text-sm text-muted-foreground">รับเครื่อง {formatDate(order.receivedDate)}</span>
+        <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Link href={`/print/${order.id}`}>
+            <Printer /> พิมพ์ใบรับเครื่อง
+          </Link>
+        </Button>
         {order.allowedActions.includes("EDIT_INTAKE") && (
-          <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Button asChild variant="outline" size="sm">
             <Link href={`/staff/repairs/${order.id}/edit`}>
               <Pencil /> แก้ไขข้อมูลรับเครื่อง
             </Link>
@@ -116,7 +121,10 @@ export default function RepairDetailPage() {
 
       {flash === "created" && (
         <p className="flex items-center gap-2 rounded-md bg-green-600/10 px-4 py-3 text-sm text-green-800">
-          <CheckCircle2 className="size-4" /> เปิดใบงานเรียบร้อยแล้ว
+          <CheckCircle2 className="size-4" /> เปิดใบงานเรียบร้อยแล้ว —
+          <Link href={`/print/${order.id}`} className="font-medium underline">
+            พิมพ์ใบรับเครื่องพร้อม QR ให้ลูกค้า
+          </Link>
         </p>
       )}
       {flash === "updated" && (
