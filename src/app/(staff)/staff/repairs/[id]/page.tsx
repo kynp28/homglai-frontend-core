@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthImage } from "@/components/staff/auth-image";
+import { ItemActions, RepairActionPanel } from "@/components/staff/repair-actions";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -51,7 +52,7 @@ export default function RepairDetailPage() {
     setFlash(q.get("imageError") ? "imageError" : q.get("created") ? "created" : null);
   }, []);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     apiData<RepairDetail>(`/api/repairs/${id}`)
       .then(setOrder)
       .catch((err) => {
@@ -62,6 +63,8 @@ export default function RepairDetailPage() {
       .then(setImages)
       .catch(() => setImages([]));
   }, [id, router]);
+
+  useEffect(load, [load]);
 
   if (error) {
     return (
@@ -113,6 +116,8 @@ export default function RepairDetailPage() {
           <TriangleAlert className="size-4" /> เปิดใบงานแล้ว แต่อัปโหลดรูปไม่สำเร็จ
         </p>
       )}
+
+      <RepairActionPanel order={order} onDone={load} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="flex flex-col gap-5 lg:col-span-2">
@@ -185,6 +190,7 @@ export default function RepairDetailPage() {
                         <th className="py-2 pr-3 text-right font-medium">ราคา/หน่วย</th>
                         <th className="py-2 pr-3 text-right font-medium">รวม</th>
                         <th className="py-2 font-medium">สถานะ</th>
+                        <th className="py-2" />
                       </tr>
                     </thead>
                     <tbody>
@@ -200,6 +206,9 @@ export default function RepairDetailPage() {
                               {ITEM_STATUS_LABEL_TH[item.status] ?? item.status}
                             </Badge>
                           </td>
+                          <td className="py-2 pl-2">
+                            <ItemActions order={order} item={item} onDone={load} />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -209,7 +218,7 @@ export default function RepairDetailPage() {
                           รวมทุกรายการ
                         </td>
                         <td className="pt-3 pr-3 text-right font-semibold">{formatMoney(order.totalAmount)}</td>
-                        <td />
+                        <td colSpan={2} />
                       </tr>
                     </tfoot>
                   </table>
