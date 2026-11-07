@@ -5,7 +5,7 @@ import { Search, Coffee, Loader2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import type { PublicTrackingView } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,7 +77,7 @@ export default function TrackPage() {
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span>
                 <span className="text-muted-foreground">รับเครื่อง: </span>
-                {formatDateTime(result.receivedDate)}
+                {formatDate(result.receivedDate)}
               </span>
               <span>
                 <span className="text-muted-foreground">อัปเดตล่าสุด: </span>

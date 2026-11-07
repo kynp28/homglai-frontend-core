@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 import { ApiError, apiData } from "@/lib/api";
 import { STATUS_LABEL_TH, type Paginated, type RepairOrderSummary } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { getEmployee } from "@/lib/auth";
+import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -15,6 +18,8 @@ export default function StaffHome() {
   const router = useRouter();
   const [data, setData] = useState<Paginated<RepairOrderSummary> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const role = getEmployee()?.role;
+  const canCreate = role === "RECEPTIONIST" || role === "ADMIN";
 
   useEffect(() => {
     apiData<Paginated<RepairOrderSummary>>("/api/repairs?page=1&limit=20")
@@ -27,8 +32,16 @@ export default function StaffHome() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle>ใบงานซ่อม {data && <span className="text-sm font-normal text-muted-foreground">({data.total} รายการ)</span>}</CardTitle>
+        {canCreate && (
+          <Button asChild size="sm">
+            <Link href="/staff/repairs/new">
+              <Plus />
+              เปิดใบงานใหม่
+            </Link>
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -49,15 +62,23 @@ export default function StaffHome() {
               </thead>
               <tbody>
                 {data.orders.map((o) => (
-                  <tr key={o.id} className="border-b last:border-0">
-                    <td className="py-2 pr-4 font-medium whitespace-nowrap">{o.jobNumber}</td>
+                  <tr
+                    key={o.id}
+                    className="cursor-pointer border-b last:border-0 hover:bg-accent/50"
+                    onClick={() => router.push(`/staff/repairs/${o.id}`)}
+                  >
+                    <td className="py-2 pr-4 font-medium whitespace-nowrap">
+                      <Link href={`/staff/repairs/${o.id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
+                        {o.jobNumber}
+                      </Link>
+                    </td>
                     <td className="py-2 pr-4">{o.customer?.name ?? "—"}</td>
                     <td className="py-2 pr-4">{o.machine ? `${o.machine.brand} ${o.machine.model}` : "—"}</td>
                     <td className="py-2 pr-4">{o.technician?.name ?? "—"}</td>
                     <td className="py-2 pr-4">
                       <Badge variant="secondary">{STATUS_LABEL_TH[o.status] ?? o.status}</Badge>
                     </td>
-                    <td className="py-2 whitespace-nowrap text-muted-foreground">{formatDateTime(o.receivedDate)}</td>
+                    <td className="py-2 whitespace-nowrap text-muted-foreground">{formatDate(o.receivedDate)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -44,11 +44,22 @@ export async function api<T = unknown>(path: string, { body, auth = true, header
   const json = await res.json().catch(() => null);
   if (!res.ok) {
     if (res.status === 401 && auth) clearSession();
-    const message = (json && typeof json === "object" && "message" in json && String(json.message)) || `เกิดข้อผิดพลาด (${res.status})`;
-    throw new ApiError(res.status, message, json);
+    throw new ApiError(res.status, errorMessage(json, res.status), json);
   }
   return json as T;
 }
+
+/** รวมข้อความ error จาก backend (รวมรายการ field จาก validation ถ้ามี) */
+function errorMessage(json: unknown, status: number): string {
+  if (!json || typeof json !== "object") return `เกิดข้อผิดพลาด (${status})`;
+  const body = json as { message?: unknown; error?: unknown; errors?: Array<{ field?: string; message?: string }> };
+  const base = String(body.message ?? body.error ?? `เกิดข้อผิดพลาด (${status})`);
+  if (Array.isArray(body.errors) && body.errors.length > 0) {
+    return `${base}: ${body.errors.map((e) => (e.field ? `${e.field} — ${e.message}` : e.message)).join(", ")}`;
+  }
+  return base;
+}
+
 
 /** สำหรับ endpoint ที่ตอบ { status, data } */
 export async function apiData<T>(path: string, options?: Options): Promise<T> {
