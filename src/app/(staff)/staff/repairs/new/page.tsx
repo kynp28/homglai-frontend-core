@@ -17,6 +17,8 @@ import {
   type BillingType,
   type CareAdvice,
   type CreateRepairInput,
+  type Paginated,
+  type RepairOrderSummary,
   type SymptomCategory,
   type WarrantyStatus,
 } from "@/lib/types";
@@ -39,6 +41,7 @@ export default function NewRepairPage() {
   const [receivedDate, setReceivedDate] = useState(todayBangkok());
   const [paperBookNo, setPaperBookNo] = useState("");
   const [paperReceiptNo, setPaperReceiptNo] = useState("");
+  const [lastPaper, setLastPaper] = useState<{ bookNo: string | null; receiptNo: string } | null>(null);
   // ลูกค้า
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -79,6 +82,24 @@ export default function NewRepairPage() {
   }
 
   useEffect(loadSymptoms, []);
+
+  // เสนอเล่มที่/เลขที่ถัดไปจากใบล่าสุดในระบบ (พนักงานตรวจกับใบกระดาษและแก้ได้)
+  useEffect(() => {
+    apiData<Paginated<RepairOrderSummary>>("/api/repairs?page=1&limit=100")
+      .then((data) => {
+        const latest = data.orders
+          .filter((o) => o.paperReceiptNo && /^\d+$/.test(o.paperReceiptNo))
+          .sort((a, b) => Number(b.paperReceiptNo) - Number(a.paperReceiptNo))[0];
+        if (!latest?.paperReceiptNo) return;
+        const next = String(Number(latest.paperReceiptNo) + 1);
+        setLastPaper({ bookNo: latest.paperBookNo ?? null, receiptNo: latest.paperReceiptNo });
+        if (next.length <= 10) setPaperReceiptNo((cur) => cur || next);
+        if (latest.paperBookNo) setPaperBookNo((cur) => cur || latest.paperBookNo!);
+      })
+      .catch(() => {
+        /* ไม่มีข้อมูลเสนอ — ให้กรอกเองตามปกติ */
+      });
+  }, []);
 
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
   useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
@@ -172,6 +193,13 @@ export default function NewRepairPage() {
             />
           </Field>
         </div>
+        {lastPaper && (
+          <p className="text-xs text-muted-foreground">
+            ระบบเติมเลขถัดไปให้จากใบล่าสุดในระบบ (
+            {lastPaper.bookNo ? `เล่ม ${lastPaper.bookNo} ` : ""}เลขที่ {lastPaper.receiptNo}) — กรุณาตรวจให้ตรงกับใบกระดาษ
+            ถ้าขึ้นเล่มใหม่ให้แก้เล่มที่ด้วย
+          </p>
+        )}
       </Section>
 
       <Section title="ลูกค้า">

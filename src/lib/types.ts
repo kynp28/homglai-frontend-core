@@ -61,6 +61,8 @@ export interface RepairOrderSummary {
   receivedDate: string;
   createdAt: string;
   updatedAt: string;
+  paperBookNo?: string | null;
+  paperReceiptNo?: string | null;
   customer?: { id: number; name: string; phone?: string } | null;
   machine?: { id: number; brand: string; model: string; serialNumber?: string | null } | null;
   technician?: { id: number; name: string } | null;
