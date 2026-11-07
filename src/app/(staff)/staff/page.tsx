@@ -22,12 +22,17 @@ export default function StaffHome() {
   const canCreate = role === "RECEPTIONIST" || role === "ADMIN";
 
   useEffect(() => {
-    apiData<Paginated<RepairOrderSummary>>("/api/repairs?page=1&limit=20")
-      .then(setData)
-      .catch((err) => {
-        if (err instanceof ApiError && err.status === 401) router.replace("/login");
-        else setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-      });
+    const load = () =>
+      apiData<Paginated<RepairOrderSummary>>("/api/repairs?page=1&limit=20")
+        .then(setData)
+        .catch((err) => {
+          if (err instanceof ApiError && err.status === 401) router.replace("/login");
+          else setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+        });
+    load();
+    // โหลดใหม่เมื่อช่างเปลี่ยนสถานะ (อาจได้รับงานใหม่)
+    window.addEventListener("hsc:refresh", load);
+    return () => window.removeEventListener("hsc:refresh", load);
   }, [router]);
 
   return (

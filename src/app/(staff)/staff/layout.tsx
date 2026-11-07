@@ -7,6 +7,7 @@ import { Coffee, LogOut } from "lucide-react";
 import { clearSession, getEmployee, getToken } from "@/lib/auth";
 import { ROLE_LABEL_TH, type Employee } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { TechnicianStatusBar } from "@/components/staff/technician-status";
 
 // ทุกหน้าใต้ /staff ต้อง login ก่อน (backend ตรวจสิทธิ์ซ้ำทุก request อยู่แล้ว)
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
@@ -48,6 +49,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
       </header>
+      {employee.role === "TECHNICIAN" && <TechnicianStatusBar employee={employee} onChange={setEmployee} />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
     </div>
   );
