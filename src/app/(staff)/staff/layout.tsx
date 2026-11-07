@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Coffee, LogOut } from "lucide-react";
 
 import { clearSession, getEmployee, getToken } from "@/lib/auth";
 import { ROLE_LABEL_TH, type Employee } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { TechnicianStatusBar } from "@/components/staff/technician-status";
 
 // ทุกหน้าใต้ /staff ต้อง login ก่อน (backend ตรวจสิทธิ์ซ้ำทุก request อยู่แล้ว)
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [employee, setEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
@@ -25,12 +28,33 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
   if (!employee) return null;
 
+  const nav = [
+    { href: "/staff", label: "ใบงาน", show: true },
+    { href: "/staff/dashboard", label: "ภาพรวม", show: employee.role !== "TECHNICIAN" },
+    { href: "/staff/admin", label: "จัดการระบบ", show: employee.role === "ADMIN" },
+  ].filter((n) => n.show);
+  const isActive = (href: string) => (href === "/staff" ? pathname === "/staff" || pathname.startsWith("/staff/repairs") : pathname.startsWith(href));
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b bg-card">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4">
+        <div className="mx-auto flex min-h-14 w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
           <Coffee className="size-5 text-primary" />
-          <span className="font-semibold">Homglai Service</span>
+          <span className="hidden font-semibold sm:inline">Homglai Service</span>
+          <nav className="flex gap-1 text-sm sm:ml-4">
+            {nav.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={cn(
+                  "rounded-md px-3 py-1.5 transition-colors",
+                  isActive(n.href) ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="hidden sm:inline">
               {employee.name} <span className="text-muted-foreground">· {ROLE_LABEL_TH[employee.role]}</span>
