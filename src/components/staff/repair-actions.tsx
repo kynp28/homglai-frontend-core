@@ -33,6 +33,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { CheckItem, Field, selectClass } from "@/components/staff/form-bits";
 
+/** ยอดรวมใบงานที่ต้องโทรยืนยันราคากับลูกค้า (ต้องตรงกับ PRICE_APPROVAL_THRESHOLD ของ backend) */
+const PRICE_APPROVAL_THRESHOLD = Number(process.env.NEXT_PUBLIC_PRICE_APPROVAL_THRESHOLD ?? 1000);
+
 type Dialog =
   | "ACCEPT"
   | "RELEASE"
@@ -294,11 +297,23 @@ export function RepairActionPanel({ order, onDone }: { order: RepairDetail; onDo
           <Field label="บาร์โค้ด / รหัสสินค้า" htmlFor="itemBarcode">
             <Input id="itemBarcode" value={item.barcode} onChange={(e) => setItem({ ...item, barcode: e.target.value })} maxLength={64} />
           </Field>
-          {item.quantity && item.unitPrice && (
-            <p className="text-sm text-muted-foreground">
-              รวม {formatMoney(Number(item.quantity) * Number(item.unitPrice))} บาท — รายการใหม่จะรอลูกค้ายืนยันราคา
-            </p>
-          )}
+          {item.quantity && item.unitPrice && (() => {
+            const amount = Number(item.quantity) * Number(item.unitPrice);
+            const current = order.repairItems
+              .filter((i) => i.status !== "REJECTED")
+              .reduce((sum, i) => sum + Number(i.amount), 0);
+            const total = current + amount;
+            const needsCall =
+              PRICE_APPROVAL_THRESHOLD <= 0 ||
+              total >= PRICE_APPROVAL_THRESHOLD ||
+              order.repairItems.some((i) => i.status === "PENDING");
+            return (
+              <p className={needsCall ? "text-sm text-amber-800" : "text-sm text-green-800"}>
+                รายการนี้ {formatMoney(amount)} บาท · ยอดรวมใบงาน {formatMoney(total)} บาท —{" "}
+                {needsCall ? "ต้องโทรยืนยันราคากับลูกค้า" : "ไม่ถึงเกณฑ์ ระบบอนุมัติให้อัตโนมัติ"}
+              </p>
+            );
+          })()}
           <ErrorText error={error} />
           <Footer busy={busy} onCancel={close} label="เพิ่มรายการ" />
         </form>
