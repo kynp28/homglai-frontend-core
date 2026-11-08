@@ -113,31 +113,31 @@ export type AccessoryKey = (typeof ACCESSORY_KEYS)[number];
 export type Accessories = Record<AccessoryKey, boolean> & { other: string | null };
 
 export const ACCESSORY_LABEL_TH: Record<AccessoryKey, string> = {
-  drainTray: "ถาดรองน้ำทิ้ง",
-  portafilter: "ด้ามชง",
-  basket1Shot: "ตะแกรง 1 ช็อต",
-  basket2Shot: "ตะแกรง 2 ช็อต",
+  drainTray: "ถาดน้ำทิ้ง",
+  portafilter: "ด้ามอัด/ทางไหล",
+  basket1Shot: "Basket 1 shot",
+  basket2Shot: "Basket 2 shot",
   powerCord: "สายไฟ",
   waterTank: "แท้งค์น้ำ",
   tamper: "แทมเปอร์",
-  steamWandCover: "ปลอกก้านสตีม",
+  steamWandCover: "ปลอกท่อสตีม",
 };
 
 export type CareAdvice = { cleanAfterUse: boolean; noOverload: boolean };
 export const CARE_ADVICE_LABEL_TH: Record<keyof CareAdvice, string> = {
-  cleanAfterUse: "ทำความสะอาดเครื่องหลังใช้งาน",
-  noOverload: "ไม่ใช้งานเครื่องเกินกำลัง",
+  cleanAfterUse: "ทำความสะอาดเครื่องทุกครั้งหลังใช้งาน",
+  noOverload: "อย่าใช้งานเกินกำลังของเครื่องตามมาตรฐานที่โรงงานกำหนดไว้",
 };
 
 export const WARRANTY_LABEL_TH: Record<WarrantyStatus, string> = {
-  IN_WARRANTY: "อยู่ในประกัน",
-  OUT_OF_WARRANTY: "หมดประกัน",
+  IN_WARRANTY: "เครื่องอยู่ในประกัน",
+  OUT_OF_WARRANTY: "เครื่องไม่อยู่ในประกัน",
 };
 
 export const BILLING_LABEL_TH: Record<BillingType, string> = {
-  CHARGE_OUT_OF_WARRANTY: "คิดค่าบริการ (นอกประกัน)",
-  NO_CHARGE_IN_WARRANTY: "ไม่คิดค่าบริการ (ในประกัน)",
-  CHARGE_IN_WARRANTY: "คิดค่าบริการ (ในประกัน)",
+  CHARGE_OUT_OF_WARRANTY: "คิดเงิน เครื่องไม่อยู่ในประกัน",
+  NO_CHARGE_IN_WARRANTY: "ไม่คิดเงิน เครื่องอยู่ในประกัน",
+  CHARGE_IN_WARRANTY: "คิดเงิน เครื่องอยู่ในประกัน",
 };
 
 export interface CreateRepairInput {
