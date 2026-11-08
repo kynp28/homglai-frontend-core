@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Coffee, LogOut } from "lucide-react";
 
-import { clearSession, getEmployee, getToken } from "@/lib/auth";
+import { clearSession, getEmployee, getToken, saveSession } from "@/lib/auth";
+import { apiData } from "@/lib/api";
 import { ROLE_LABEL_TH, type Employee } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,16 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
       return;
     }
     setEmployee(emp);
+    // ดึงสถานะล่าสุดจาก backend (สถานะที่เก็บตอน login อาจเก่าแล้ว)
+    apiData<Employee>("/api/employees/me")
+      .then((fresh) => {
+        const next = { ...emp, status: fresh.status, name: fresh.name, role: fresh.role };
+        saveSession(getToken()!, next);
+        setEmployee(next);
+      })
+      .catch(() => {
+        /* backend รุ่นเก่ายังไม่มี /me — ใช้ค่าที่เก็บไว้ */
+      });
   }, [router]);
 
   if (!employee) return null;
