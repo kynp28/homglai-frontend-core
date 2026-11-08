@@ -11,6 +11,7 @@ import { ROLE_LABEL_TH, type Employee, type LoginResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // LIFF ID ไม่ใช่ความลับ — ใช้ค่าจาก Vercel ถ้าตั้งไว้ ไม่งั้นใช้ LIFF ช่างของร้าน
@@ -31,6 +32,8 @@ export default function LiffTechPage() {
   const [error, setError] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [unlinking, setUnlinking] = useState(false);
+  const [reason, setReason] = useState("");
 
   const loadMe = useCallback(async () => {
     if (!getToken()) {
@@ -98,7 +101,9 @@ export default function LiffTechPage() {
     setBusy(true);
     setError(null);
     try {
-      await api("/api/employees/me/line", { method: "DELETE" });
+      await api("/api/employees/me/line", { method: "DELETE", body: { reason: reason.trim() } });
+      setUnlinking(false);
+      setReason("");
       await loadMe();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ยกเลิกการผูกไม่สำเร็จ");
@@ -155,9 +160,41 @@ export default function LiffTechPage() {
                   <Button asChild>
                     <Link href="/staff">ไปหน้างานของฉัน</Link>
                   </Button>
-                  <Button variant="ghost" onClick={unlink} disabled={busy}>
-                    <Unlink /> ยกเลิกการผูก LINE
-                  </Button>
+                  {!unlinking ? (
+                    <Button variant="ghost" onClick={() => setUnlinking(true)} disabled={busy}>
+                      <Unlink /> ยกเลิกการผูก LINE
+                    </Button>
+                  ) : (
+                    <form
+                      className="flex flex-col gap-2 rounded-md border p-3"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        unlink();
+                      }}
+                    >
+                      <Label htmlFor="reason">เหตุผลที่ยกเลิกการผูก (แจ้งผู้ดูแลระบบ)</Label>
+                      <Textarea
+                        id="reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        placeholder="เช่น เปลี่ยนมือถือ / เปลี่ยนบัญชี LINE"
+                        minLength={3}
+                        maxLength={300}
+                        rows={2}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">หลังยกเลิก จะไม่ได้รับแจ้งงานใหม่ทาง LINE จนกว่าจะผูกใหม่</p>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setUnlinking(false)} disabled={busy}>
+                          ไม่ยกเลิก
+                        </Button>
+                        <Button type="submit" variant="destructive" disabled={busy || reason.trim().length < 3}>
+                          {busy && <Loader2 className="animate-spin" />}
+                          ยืนยันยกเลิกการผูก
+                        </Button>
+                      </div>
+                    </form>
+                  )}
                 </>
               ) : (
                 <Button onClick={link} disabled={busy}>

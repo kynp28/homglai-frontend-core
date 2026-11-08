@@ -266,6 +266,7 @@ export interface RepairImage {
 /** GET /api/employees (ADMIN) */
 export interface EmployeeRecord extends Employee {
   isActive: boolean;
+  lineLinked?: boolean;
   weeklyDayOff: number | null;
   createdAt: string;
   updatedAt: string;

@@ -11,6 +11,7 @@ import { ROLE_LABEL_TH, type Employee } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TechnicianStatusBar } from "@/components/staff/technician-status";
+import { NotificationBell } from "@/components/staff/notification-bell";
 
 // ทุกหน้าใต้ /staff ต้อง login ก่อน (backend ตรวจสิทธิ์ซ้ำทุก request อยู่แล้ว)
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
@@ -67,6 +68,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
+            <NotificationBell />
             <span className="hidden sm:inline">
               {employee.name} <span className="text-muted-foreground">· {ROLE_LABEL_TH[employee.role]}</span>
             </span>

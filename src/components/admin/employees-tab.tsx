@@ -68,6 +68,7 @@ export function EmployeesTab() {
               <th className="px-4 py-2 font-medium">บทบาท</th>
               <th className="px-4 py-2 font-medium">สถานะ</th>
               <th className="px-4 py-2 font-medium">วันหยุดประจำ</th>
+              <th className="px-4 py-2 font-medium">LINE</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -81,6 +82,9 @@ export function EmployeesTab() {
                   {e.isActive ? <Badge variant="secondary">{STATUS_TH[e.status] ?? e.status}</Badge> : <Badge variant="outline">ปิดใช้งาน</Badge>}
                 </td>
                 <td className="px-4 py-2">{e.weeklyDayOff === null ? "—" : WEEKDAY_LABEL_TH[e.weeklyDayOff]}</td>
+                <td className="px-4 py-2">
+                  {e.lineLinked === undefined ? "—" : e.lineLinked ? <Badge variant="secondary">ผูกแล้ว</Badge> : <span className="text-muted-foreground">ยังไม่ผูก</span>}
+                </td>
                 <td className="px-4 py-2">
                   <div className="flex justify-end gap-1">
                     <Button size="sm" variant="ghost" onClick={() => open("edit", e)}>
