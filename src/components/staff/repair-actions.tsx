@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Ban,
   Check,
@@ -134,7 +134,16 @@ function PaymentFields({
 // แผงปุ่มดำเนินการของใบงาน — แสดงเฉพาะปุ่มที่ backend อนุญาต (order.allowedActions)
 // ---------------------------------------------------------------------------------------------
 
-export function RepairActionPanel({ order, onDone }: { order: RepairDetail; onDone: () => void }) {
+export function RepairActionPanel({
+  order,
+  onDone,
+  initialAction,
+}: {
+  order: RepairDetail;
+  onDone: () => void;
+  /** เปิดฟอร์มนี้ทันที (จากลิงก์ในการ์ด LINE เช่น ?do=add-item) ถ้าใบงานยังทำขั้นนั้นได้ */
+  initialAction?: "ADD_ITEM" | "COMPLETE" | null;
+}) {
   const can = (a: string) => order.allowedActions.includes(a);
   const [dialog, setDialog] = useState<Dialog>(null);
   const { busy, error, setError, run } = useRun(onDone);
@@ -162,6 +171,15 @@ export function RepairActionPanel({ order, onDone }: { order: RepairDetail; onDo
   }
   const close = () => !busy && setDialog(null);
   const closeAfter = () => setDialog(null);
+
+  // เปิดฟอร์มจากลิงก์ครั้งเดียว
+  const [autoOpened, setAutoOpened] = useState(false);
+  useEffect(() => {
+    if (autoOpened || !initialAction) return;
+    setAutoOpened(true);
+    if (order.allowedActions.includes(initialAction)) open(initialAction);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialAction, autoOpened]);
 
   const payment = () => ({ amount: Number(payAmount), method: payMethod, ...(payNote.trim() ? { note: payNote.trim() } : {}) });
 

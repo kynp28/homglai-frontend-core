@@ -29,6 +29,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthImage } from "@/components/staff/auth-image";
 import { ItemActions, RepairActionPanel } from "@/components/staff/repair-actions";
 import { HelpersEditor } from "@/components/staff/helpers-editor";
+import { PhotoUpload } from "@/components/staff/photo-upload";
+import { getEmployee } from "@/lib/auth";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -252,7 +254,14 @@ export default function RepairDetailPage() {
             <CardHeader>
               <CardTitle>รูปภาพ</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-4">
+              {!["DELIVERED", "CANCELLED"].includes(order.status) && (
+                <PhotoUpload
+                  orderId={order.id}
+                  kinds={getEmployee()?.role === "TECHNICIAN" ? ["DELIVERY", "OTHER"] : ["INTAKE", "RECEIPT_PAPER", "DELIVERY", "OTHER"]}
+                  onDone={load}
+                />
+              )}
               {images.length === 0 ? (
                 <p className="text-sm text-muted-foreground">ยังไม่มีรูป</p>
               ) : (

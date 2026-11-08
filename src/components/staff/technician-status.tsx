@@ -25,7 +25,16 @@ const STATUS_DOT: Record<EmployeeStatus, string> = {
 };
 
 /** แถบสถานะของช่าง: กด "พร้อมรับงาน" แล้วระบบจะจ่ายงานจากคิวให้ทันที */
-export function TechnicianStatusBar({ employee, onChange }: { employee: Employee; onChange: (e: Employee) => void }) {
+export function TechnicianStatusBar({
+  employee,
+  onChange,
+  jobHref = (id) => `/staff/repairs/${id}`,
+}: {
+  employee: Employee;
+  onChange: (e: Employee) => void;
+  /** ลิงก์ไปหน้าใบงาน (เว็บ หรือหน้าในแอป LINE) */
+  jobHref?: (orderId: number) => string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -45,7 +54,7 @@ export function TechnicianStatusBar({ employee, onChange }: { employee: Employee
       window.dispatchEvent(new Event("hsc:refresh"));
       if (res.assignedOrder && next.status === "RESERVED") {
         setMessage({ tone: "ok", text: `ได้รับงาน ${res.assignedOrder.jobNumber} — เปิดใบงานแล้วกด "รับงานนี้"` });
-        router.push(`/staff/repairs/${res.assignedOrder.id}`);
+        router.push(jobHref(res.assignedOrder.id));
       } else if (status === "AVAILABLE" && next.status === "AVAILABLE") {
         setMessage({ tone: "ok", text: "พร้อมรับงานแล้ว — ตอนนี้ยังไม่มีงานในคิว ระบบจะจ่ายให้เมื่อมีงานเข้า" });
       }
