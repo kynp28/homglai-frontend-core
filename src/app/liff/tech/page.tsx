@@ -34,6 +34,7 @@ export default function LiffTechPage() {
   const [password, setPassword] = useState("");
   const [unlinking, setUnlinking] = useState(false);
   const [reason, setReason] = useState("");
+  const [pushWarning, setPushWarning] = useState(false);
 
   const loadMe = useCallback(async () => {
     if (!getToken()) {
@@ -88,7 +89,11 @@ export default function LiffTechPage() {
     setBusy(true);
     setError(null);
     try {
-      await api("/api/employees/me/line", { method: "POST", body: { lineAccessToken: liff.getAccessToken() } });
+      const res = await api<{ data?: { confirmationSent?: boolean } }>("/api/employees/me/line", {
+        method: "POST",
+        body: { lineAccessToken: liff.getAccessToken() },
+      });
+      setPushWarning(res.data?.confirmationSent === false);
       await loadMe();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ผูกบัญชีไม่สำเร็จ");
@@ -157,6 +162,11 @@ export default function LiffTechPage() {
                   <p className="flex items-center gap-2 rounded-md bg-green-600/10 px-3 py-2 text-sm text-green-800">
                     <CheckCircle2 className="size-4" /> ผูก LINE แล้ว — งานใหม่จะส่งมาที่แชตนี้
                   </p>
+                  {pushWarning && (
+                    <p className="rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-800">
+                      ผูกสำเร็จ แต่ระบบส่งข้อความเข้า LINE นี้ไม่ได้ — กรุณาเพิ่มเพื่อน OA ช่างก่อน (ถ้าเคยบล็อกไว้ให้ปลดบล็อก)
+                    </p>
+                  )}
                   <Button asChild>
                     <Link href="/staff">ไปหน้างานของฉัน</Link>
                   </Button>
