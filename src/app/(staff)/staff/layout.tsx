@@ -43,6 +43,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const nav = [
     { href: "/staff", label: "ใบงาน", show: true },
     { href: "/staff/dashboard", label: "ภาพรวม", show: employee.role !== "TECHNICIAN" },
+    { href: "/staff/parts", label: "อะไหล่", show: employee.role !== "TECHNICIAN" },
     { href: "/staff/admin", label: "จัดการระบบ", show: employee.role === "ADMIN" },
   ].filter((n) => n.show);
   const isActive = (href: string) => (href === "/staff" ? pathname === "/staff" || pathname.startsWith("/staff/repairs") : pathname.startsWith(href));
