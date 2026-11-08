@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const LIFF_ID = process.env.NEXT_PUBLIC_LINE_TECH_LIFF_ID ?? "";
+// LIFF ID ไม่ใช่ความลับ — ใช้ค่าจาก Vercel ถ้าตั้งไว้ ไม่งั้นใช้ LIFF ช่างของร้าน
+const LIFF_ID = process.env.NEXT_PUBLIC_LINE_TECH_LIFF_ID || "2012415444-0KcVoFEn";
 
 type Me = Employee & { lineLinked: boolean };
 
