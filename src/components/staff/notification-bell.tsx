@@ -16,6 +16,7 @@ const KIND: Record<string, { icon: React.ReactNode; tone: string; label: string 
   PROGRESS_UNANSWERED_DIGEST: { icon: <Clock className="size-5" />, tone: "bg-red-100 text-red-700", label: "ช่างไม่ตอบความคืบหน้า" },
   PROGRESS_CHECK: { icon: <Wrench className="size-5" />, tone: "bg-blue-100 text-blue-700", label: "เช็กความคืบหน้า" },
   JOB_RESERVED: { icon: <Hand className="size-5" />, tone: "bg-green-100 text-green-800", label: "งานใหม่" },
+  JOB_ACK_REMINDER: { icon: <Hand className="size-5" />, tone: "bg-amber-100 text-amber-800", label: "เตือนให้กดรับงาน" },
   ORDERS_REQUEUED_DIGEST: { icon: <RotateCcw className="size-5" />, tone: "bg-purple-100 text-purple-800", label: "งานกลับเข้าคิว" },
 };
 const kindOf = (type: string) => KIND[type] ?? { icon: <Bell className="size-5" />, tone: "bg-secondary text-foreground", label: "แจ้งเตือน" };
